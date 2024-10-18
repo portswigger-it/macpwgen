@@ -1,11 +1,11 @@
 package main
 
 import (
+	"crypto/rand"
 	"fmt"
-	"math/rand"
+	"math/big"
 	"strconv"
 	"strings"
-	"time"
 
 	"github.com/dlclark/regexp2"
 )
@@ -135,23 +135,29 @@ var (
 	}
 )
 
+func secureRandomInt(max int) int {
+	nBig, err := rand.Int(rand.Reader, big.NewInt(int64(max)))
+	if err != nil {
+		panic(err)
+	}
+	return int(nBig.Int64())
+}
+
 func main() {
 redo:
-	rand.Seed(time.Now().UnixNano())
+	// Generate a random name with 2 words and symbols/numbers in between
+	name := strings.Title(words[secureRandomInt(len(words))]) +
+		symbols[secureRandomInt(len(symbols))] +
+		strings.Title(words[secureRandomInt(len(words))])
 
-	// 3 words
-	//name := strings.Title(words[rand.Intn(len(words))]) + strings.Title(words[rand.Intn(len(words))]) + strings.Title(words[rand.Intn(len(words))]) //nolint:gosec // G404: Use of weak random number generator (math/rand instead of crypto/rand)
+	name += symbols[secureRandomInt(len(symbols))] + strconv.Itoa(secureRandomInt(9))
 
-	// 2 words
-	name := strings.Title(words[rand.Intn(len(words))]) + symbols[rand.Intn(len(symbols))] + strings.Title(words[rand.Intn(len(words))])
-
-	name += symbols[rand.Intn(len(symbols))] + strconv.Itoa(rand.Intn(9)) //nolint:gosec // G404: Use of weak random number generator (math/rand instead of crypto/rand)
-	// regex to check for dupe chars
-	// note the stdlib doesn't support back searching
+	// Regex to check for duplicate characters
 	re := regexp2.MustCompile(`(.)\1{1,}`, 0)
 	match, _ := re.MatchString(name)
 	if match == true {
 		goto redo
 	}
+
 	fmt.Println(name)
 }
