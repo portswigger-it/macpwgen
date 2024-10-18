@@ -1,4 +1,4 @@
-module portswigger.net/simonb/macpwgen
+module github.com/portswigger-it/macpwgen
 
 go 1.17
 
